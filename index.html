@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Tasks</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f7f6f3;--surface:#fff;--border:#e5e4df;--border-strong:#c8c7c2;
+    --text:#1a1a18;--muted:#6b6b67;--hint:#9a9a96;
+    --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+    --green:#0F6E56;--green-bg:#E1F5EE;--green-text:#085041;
+    --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#791F1F;
+    --amber-bg:#FAEEDA;--amber-text:#633806;
+    --radius-md:8px;--radius-lg:12px;
+    --font:'Segoe UI',system-ui,sans-serif;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1a18;--surface:#242422;--border:#3a3a36;--border-strong:#5a5a56;
+      --text:#f0f0ec;--muted:#9a9a96;--hint:#6b6b67;
+      --blue-bg:#042C53;--blue-text:#B5D4F4;
+      --green-bg:#04342C;--green-text:#9FE1CB;
+      --red-bg:#501313;--red-text:#F7C1C1;
+      --amber-bg:#412402;--amber-text:#FAC775;
+    }
+  }
+  body{font-family:var(--font);background:var(--bg);min-height:100vh;padding:2rem 1rem;color:var(--text)}
+  .app{max-width:700px;margin:0 auto}
+
+  /* Setup screen */
+  #setup-screen{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;margin-bottom:1rem}
+  #setup-screen h2{font-size:18px;font-weight:500;margin-bottom:.5rem}
+  #setup-screen p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:1rem}
+  .steps{counter-reset:step;display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}
+  .step{display:flex;gap:14px;align-items:flex-start}
+  .step-num{width:26px;height:26px;border-radius:50%;background:var(--text);color:var(--bg);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .step-body{flex:1}
+  .step-body strong{font-size:14px;font-weight:500;display:block;margin-bottom:3px}
+  .step-body p{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+  .step-body a{color:var(--blue);text-decoration:none}
+  .step-body a:hover{text-decoration:underline}
+  .step-body code{background:var(--bg);border:0.5px solid var(--border-strong);border-radius:4px;padding:1px 6px;font-size:12px;font-family:monospace}
+  .client-id-row{display:flex;gap:8px;margin-top:1rem}
+  .client-id-row input{flex:1;padding:9px 12px;border:0.5px solid var(--border-strong);border-radius:var(--radius-md);font-size:13px;background:var(--bg);color:var(--text)}
+  .client-id-row input:focus{outline:none;border-color:var(--text)}
+  .dismiss-setup{font-size:12px;color:var(--muted);cursor:pointer;margin-top:.75rem;display:inline-block;text-decoration:underline;background:none;border:none;font-family:var(--font)}
+  .dismiss-setup:hover{color:var(--text)}
+
+  /* Auth bar */
+  #auth-bar{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;padding:.75rem 1rem;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg)}
+  .sync-status{flex:1;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .sync-status i{font-size:16px}
+  .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-ok{background:#1D9E75}
+  .dot-warn{background:#BA7517}
+  .dot-off{background:var(--border-strong)}
+
+  /* Buttons */
+  .btn{padding:7px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn-primary{background:var(--text);color:var(--bg);border:none}
+  .btn-primary:hover{opacity:.85}
+  .btn-outline{background:none;border:0.5px solid var(--border-strong);color:var(--text)}
+  .btn-outline:hover{background:var(--bg)}
+  .btn-google{background:#fff;border:0.5px solid var(--border-strong);color:#444;box-shadow:none}
+  .btn-google:hover{background:#f8f8f8}
+  @media(prefers-color-scheme:dark){.btn-google{background:#333;color:#eee;border-color:#555}.btn-google:hover{background:#444}}
+
+  /* Header */
+  h1{font-size:22px;font-weight:500;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+  h1 i{font-size:22px;color:var(--muted)}
+  .stats{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+  .stat{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-md);padding:6px 16px;font-size:13px;color:var(--muted)}
+  .stat b{color:var(--text);font-weight:500}
+
+  /* Add form */
+  .add-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+  .add-row{display:flex;gap:8px;margin-bottom:8px}
+  input[type=text],input[type=date],select,textarea{
+    font-family:var(--font);font-size:14px;background:var(--bg);color:var(--text);
+    border:0.5px solid var(--border-strong);border-radius:var(--radius-md);
+    padding:8px 12px;outline:none;
+  }
+  input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:var(--text)}
+  .add-row input[type=text]{flex:1}
+  .meta-row{display:flex;gap:8px;flex-wrap:wrap}
+  .meta-row select{min-width:150px}
+  .meta-row input[type=date]{min-width:140px}
+  .meta-row input[type=text]{flex:1;min-width:120px}
+
+  /* Filters / sort */
+  .filters{display:flex;gap:6px;margin-bottom:.75rem;flex-wrap:wrap}
+  .filter-btn{padding:5px 14px;border:0.5px solid var(--border-strong);border-radius:20px;background:var(--surface);color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font)}
+  .filter-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .sort-row{display:flex;align-items:center;gap:8px;margin-bottom:.75rem;font-size:13px;color:var(--muted)}
+  .sort-row select{padding:4px 8px;font-size:12px;border-radius:var(--radius-md)}
+
+  /* Task cards */
+  .tasks{display:flex;flex-direction:column;gap:6px}
+  .task-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1.125rem;display:flex;align-items:flex-start;gap:12px;transition:opacity 0.2s}
+  .task-card.done{opacity:.45}
+  .task-card.done .task-title{text-decoration:line-through;color:var(--muted)}
+  .check-btn{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-strong);background:none;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;color:var(--bg)}
+  .check-btn:hover{border-color:var(--text)}
+  .task-card.done .check-btn{background:var(--muted);border-color:var(--muted)}
+  .check-btn i{font-size:12px}
+  .task-body{flex:1;min-width:0}
+  .task-title{font-size:14px;font-weight:500;color:var(--text);line-height:1.4;word-break:break-word}
+  .task-note{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word}
+  .edit-note{width:100%;font-size:12px;padding:4px 8px;margin-top:4px;border-radius:6px;resize:none;min-height:36px}
+  .task-meta{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+  .pill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .p-high{background:var(--red-bg);color:var(--red-text)}
+  .p-medium{background:var(--amber-bg);color:var(--amber-text)}
+  .p-low{background:var(--green-bg);color:var(--green-text)}
+  .due{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:3px}
+  .due.overdue{color:var(--red);font-weight:500}
+  .due i{font-size:12px}
+  .actions{display:flex;gap:4px;flex-shrink:0}
+  .icon-btn{background:none;border:none;cursor:pointer;color:var(--hint);padding:4px;border-radius:6px;font-size:16px;line-height:1;display:flex;align-items:center}
+  .icon-btn:hover{color:var(--text);background:var(--bg)}
+  .del-btn:hover{color:var(--red)}
+  .empty{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:14px}
+  .empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.4}
+  .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;padding:8px 20px;border-radius:20px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Setup instructions -->
+  <div id="setup-screen">
+    <h2><i class="ti ti-brand-google-drive" aria-hidden="true" style="margin-right:8px;vertical-align:-3px"></i>One-time Google setup</h2>
+    <p>This app saves your tasks to a private file in your Google Drive. Complete the steps below once, then paste your Client ID to get started. You can collapse this panel afterwards.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Create a Google Cloud project</strong>
+          <p>Go to <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> → click <em>Select a project</em> → <em>New Project</em>. Name it anything (e.g. "My Tasks App") and click <em>Create</em>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Enable the Google Drive API</strong>
+          <p>In your project, go to <em>APIs &amp; Services → Library</em>, search for <strong>Google Drive API</strong>, and click <em>Enable</em>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Configure the OAuth consent screen</strong>
+          <p>Go to <em>APIs &amp; Services → OAuth consent screen</em>. Choose <em>External</em>, fill in an app name (anything), your email, and click <em>Save and Continue</em> through all steps. Under <em>Test users</em>, add your own Gmail address.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Create an OAuth Client ID</strong>
+          <p>Go to <em>APIs &amp; Services → Credentials → Create Credentials → OAuth client ID</em>. Choose <em>Web application</em>. Under <em>Authorised JavaScript origins</em>, add the exact URL where you open this file (e.g. <code>https://your-domain.com</code> or <code>http://localhost</code> for local use). Copy the <strong>Client ID</strong>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Paste your Client ID below</strong>
+          <p>Your tasks will be saved to a private <code>tasks.json</code> file in your Drive's app data folder — invisible to other apps and not browseable in regular Drive.</p>
+        </div>
+      </div>
+    </div>
+    <div class="client-id-row">
+      <input type="text" id="client-id-input" placeholder="Paste your Client ID here (ends in .apps.googleusercontent.com)">
+      <button class="btn btn-primary" onclick="saveClientId()"><i class="ti ti-check" aria-hidden="true"></i> Save</button>
+    </div>
+    <button class="dismiss-setup" onclick="toggleSetup()" id="setup-toggle">Hide setup instructions</button>
+  </div>
+
+  <!-- Auth bar -->
+  <div id="auth-bar">
+    <div class="sync-status" id="sync-status">
+      <div class="status-dot dot-off" id="status-dot"></div>
+      <span id="status-text">Not signed in</span>
+    </div>
+    <button class="btn btn-google" id="sign-btn" onclick="handleAuth()">
+      <i class="ti ti-brand-google" aria-hidden="true" style="font-size:16px"></i>
+      Sign in with Google
+    </button>
+  </div>
+
+  <h1><i class="ti ti-checks" aria-hidden="true"></i> My Tasks</h1>
+
+  <div class="stats">
+    <div class="stat"><b id="done-count">0</b> done</div>
+    <div class="stat"><b id="left-count">0</b> remaining</div>
+    <div class="stat"><b id="over-count">0</b> overdue</div>
+  </div>
+
+  <div class="add-card">
+    <div class="add-row">
+      <input type="text" id="task-input" placeholder="Add a new task…" onkeydown="if(event.key==='Enter')addTask()" autocomplete="off">
+      <button class="btn btn-primary" onclick="addTask()"><i class="ti ti-plus" aria-hidden="true"></i> Add</button>
+    </div>
+    <div class="meta-row">
+      <select id="priority-input">
+        <option value="medium">⚡ Medium priority</option>
+        <option value="high">🔴 High priority</option>
+        <option value="low">🟢 Low priority</option>
+      </select>
+      <input type="date" id="due-input" title="Due date">
+      <input type="text" id="note-input" placeholder="Note (optional)">
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('active',this)">Active</button>
+    <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+    <button class="filter-btn" onclick="setFilter('high',this)">🔴 High</button>
+    <button class="filter-btn" onclick="setFilter('overdue',this)">⚠️ Overdue</button>
+  </div>
+
+  <div class="sort-row">
+    Sort by:
+    <select onchange="setSort(this.value)">
+      <option value="added">Date added</option>
+      <option value="due">Due date</option>
+      <option value="priority">Priority</option>
+      <option value="completed">Completed date</option>
+    </select>
+  </div>
+
+  <div class="tasks" id="task-list"></div>
+
+  <div style="margin-top:1.25rem;display:flex;justify-content:flex-end;gap:8px">
+    <label class="btn btn-outline" style="font-size:13px;cursor:pointer">
+      <i class="ti ti-upload" aria-hidden="true"></i> Import tasks.json
+      <input type="file" accept=".json" style="display:none" onchange="importTasks(event)">
+    </label>
+    <button class="btn btn-outline" onclick="exportTasks()" style="font-size:13px">
+      <i class="ti ti-download" aria-hidden="true"></i> Export tasks.json
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+
+<script>
+const SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'tasks.json';
+const LS_CLIENT = 'todo_client_id';
+const LS_SETUP = 'todo_setup_hidden';
+
+let tasks = [];
+let nextId = 1;
+let filter = 'all';
+let sortBy = 'added';
+let editingNote = null;
+let accessToken = null;
+let driveFileId = null;
+let backupFileId = null;
+let saveTimer = null;
+let isSigned = false;
+let isLoaded = false;
+let clientId = localStorage.getItem(LS_CLIENT) || '';
+
+function init() {
+  if (clientId) {
+    document.getElementById('client-id-input').value = clientId;
+  }
+  if (localStorage.getItem(LS_SETUP) === '1') {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('setup-toggle').textContent = 'Show setup instructions';
+  }
+  render();
+}
+
+function saveClientId() {
+  const val = document.getElementById('client-id-input').value.trim();
+  if (!val) { showToast('Please paste your Client ID first'); return; }
+  clientId = val;
+  localStorage.setItem(LS_CLIENT, clientId);
+  showToast('Client ID saved — you can now sign in');
+}
+
+function toggleSetup() {
+  const el = document.getElementById('setup-screen');
+  const btn = document.getElementById('setup-toggle');
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? 'Hide setup instructions' : 'Show setup instructions';
+  localStorage.setItem(LS_SETUP, hidden ? '0' : '1');
+}
+
+function handleAuth() {
+  if (isSigned) { signOut(); return; }
+  if (!clientId) { showToast('Save your Client ID first (see setup above)'); return; }
+  signIn();
+}
+
+function signIn() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: SCOPE,
+    callback: async (resp) => {
+      if (resp.error) { setStatus('error', 'Sign-in failed: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      isSigned = true;
+      document.getElementById('sign-btn').innerHTML = '<i class="ti ti-logout" aria-hidden="true" style="font-size:16px"></i> Sign out';
+      setStatus('syncing', 'Loading tasks…');
+      await loadFromDrive();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null; isSigned = false; driveFileId = null; backupFileId = null; isLoaded = false;
+  document.getElementById('sign-btn').innerHTML = '<i class="ti ti-brand-google" aria-hidden="true" style="font-size:16px"></i> Sign in with Google';
+  setStatus('off', 'Not signed in');
+  tasks = []; render();
+}
+
+function setStatus(state, msg) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot ' + (state==='ok'?'dot-ok':state==='syncing'?'dot-warn':'dot-off');
+  txt.textContent = msg;
+}
+
+async function driveRequest(method, url, body, isText) {
+  const opts = { method, headers: { Authorization: 'Bearer ' + accessToken } };
+  if (body && typeof body === 'string') {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = body;
+  } else if (body instanceof FormData || body instanceof Blob) {
+    opts.body = body;
+  }
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return isText ? res.text() : res.json();
+}
+
+async function loadFromDrive() {
+  try {
+    const list = await driveRequest('GET',
+      'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q=name%3D%27' + FILE_NAME + '%27');
+    if (list.files && list.files.length > 0) {
+      driveFileId = list.files[0].id;
+      const content = await driveRequest('GET',
+        'https://www.googleapis.com/drive/v3/files/' + driveFileId + '?alt=media', null, true);
+      const data = JSON.parse(content);
+      tasks = data.tasks || [];
+      nextId = data.nextId || (tasks.length ? Math.max(...tasks.map(t=>t.id))+1 : 1);
+      setStatus('ok', 'Synced with Google Drive');
+    } else {
+      setStatus('ok', 'Connected — no tasks yet');
+    }
+    isLoaded = true;
+    render();
+  } catch(e) {
+    setStatus('error', 'Could not load from Drive');
+    showToast('Load error: ' + e.message);
+  }
+}
+
+async function saveBackupToDrive(body) {
+  try {
+    const BACKUP_NAME = 'tasks-backup.json';
+    if (!backupFileId) {
+      const list = await driveRequest('GET',
+        'https://www.googleapis.com/drive/v3/files?fields=files(id,name)&q=name%3D%27' + BACKUP_NAME + '%27+and+trashed%3Dfalse');
+      if (list.files && list.files.length > 0) backupFileId = list.files[0].id;
+    }
+    if (backupFileId) {
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/' + backupFileId + '?uploadType=media', {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body
+      });
+    } else {
+      const meta = JSON.stringify({ name: BACKUP_NAME });
+      const form = new FormData();
+      form.append('metadata', new Blob([meta], { type: 'application/json' }));
+      form.append('file', new Blob([body], { type: 'application/json' }));
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        body: form
+      });
+      const json = await res.json();
+      backupFileId = json.id;
+    }
+  } catch(e) { console.warn('Backup save failed:', e.message); }
+}
+
+async function saveToDrive() {
+  if (!isSigned) return;
+  setStatus('syncing', 'Saving…');
+  const body = JSON.stringify({ tasks, nextId });
+  try {
+    if (driveFileId) {
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/' + driveFileId + '?uploadType=media', {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body
+      });
+    } else {
+      const meta = JSON.stringify({ name: FILE_NAME, parents: ['appDataFolder'] });
+      const form = new FormData();
+      form.append('metadata', new Blob([meta], { type: 'application/json' }));
+      form.append('file', new Blob([body], { type: 'application/json' }));
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        body: form
+      });
+      const json = await res.json();
+      driveFileId = json.id;
+    }
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setStatus('ok', 'Saved to Drive · ' + now);
+    saveBackupToDrive(body); // also save a visible backup in regular Drive
+  } catch(e) {
+    setStatus('error', 'Save failed');
+    showToast('Save error: ' + e.message);
+  }
+}
+
+function scheduleSave() {
+  if (!isLoaded) return; // never save before Drive data is fully loaded
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToDrive, 1200);
+}
+
+function addTask() {
+  const title = document.getElementById('task-input').value.trim();
+  if (!title) { document.getElementById('task-input').focus(); return; }
+  tasks.unshift({ id: nextId++, title,
+    priority: document.getElementById('priority-input').value,
+    due: document.getElementById('due-input').value,
+    note: document.getElementById('note-input').value.trim(),
+    done: false, added: Date.now(), createdAt: Date.now(), completedAt: null });
+  document.getElementById('task-input').value = '';
+  document.getElementById('note-input').value = '';
+  document.getElementById('due-input').value = '';
+  scheduleSave(); render();
+  document.getElementById('task-input').focus();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (t) {
+    t.done = !t.done;
+    t.completedAt = t.done ? Date.now() : null;
+    scheduleSave(); render();
+  }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t=>t.id!==id);
+  scheduleSave(); render();
+}
+
+function startEditNote(id) { editingNote = id; render(); const el = document.getElementById('note-edit-'+id); if(el){el.focus();el.select();} }
+function saveNote(id) {
+  const el = document.getElementById('note-edit-'+id);
+  if(el){ const t=tasks.find(t=>t.id===id); if(t) t.note=el.value.trim(); }
+  editingNote=null; scheduleSave(); render();
+}
+
+function setFilter(f,btn) {
+  filter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); render();
+}
+function setSort(s){ sortBy=s; render(); }
+
+function isOverdue(due) {
+  if(!due) return false;
+  const t=new Date(); t.setHours(0,0,0,0);
+  return new Date(due+'T00:00:00') < t;
+}
+function formatDate(due) {
+  if(!due) return '';
+  return new Date(due+'T00:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+}
+function formatTs(ts) {
+  if(!ts) return '';
+  return new Date(ts).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+}
+const PRI = {high:0,medium:1,low:2};
+function getSorted(list) {
+  return [...list].sort((a,b)=>{
+    // Always push completed tasks to the bottom
+    if(a.done !== b.done) return a.done ? 1 : -1;
+    if(sortBy==='priority') return PRI[a.priority]-PRI[b.priority];
+    if(sortBy==='due'){ if(!a.due&&!b.due)return 0; if(!a.due)return 1; if(!b.due)return -1; return a.due.localeCompare(b.due); }
+    if(sortBy==='completed'){ return (b.completedAt||0)-(a.completedAt||0); }
+    return (b.added||0)-(a.added||0);
+  });
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function render() {
+  document.getElementById('done-count').textContent = tasks.filter(t=>t.done).length;
+  document.getElementById('left-count').textContent = tasks.filter(t=>!t.done).length;
+  document.getElementById('over-count').textContent = tasks.filter(t=>!t.done&&isOverdue(t.due)).length;
+
+  let visible = tasks.filter(t=>{
+    if(filter==='active') return !t.done;
+    if(filter==='done') return t.done;
+    if(filter==='high') return t.priority==='high'&&!t.done;
+    if(filter==='overdue') return isOverdue(t.due)&&!t.done;
+    return true;
+  });
+  visible = getSorted(visible);
+
+  const list = document.getElementById('task-list');
+  if(!isSigned) { list.innerHTML='<div class="empty"><i class="ti ti-lock" aria-hidden="true"></i>Sign in to load your tasks</div>'; return; }
+  if(visible.length===0){ list.innerHTML='<div class="empty"><i class="ti ti-circle-check" aria-hidden="true"></i>Nothing here</div>'; return; }
+
+  list.innerHTML = visible.map(t=>`
+    <div class="task-card ${t.done?'done':''}">
+      <button class="check-btn" onclick="toggleTask(${t.id})" aria-label="${t.done?'Mark incomplete':'Mark complete'}">
+        ${t.done?'<i class="ti ti-check" aria-hidden="true"></i>':''}
+      </button>
+      <div class="task-body">
+        <div class="task-title">${escHtml(t.title)}</div>
+        ${editingNote===t.id
+          ?`<textarea id="note-edit-${t.id}" class="edit-note" onblur="saveNote(${t.id})" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveNote(${t.id})}">${escHtml(t.note)}</textarea>`
+          :(t.note?`<div class="task-note">${escHtml(t.note)}</div>`:'')}
+        <div class="task-meta">
+          <span class="pill p-${t.priority}">${t.priority}</span>
+          ${t.due?`<span class="due ${!t.done&&isOverdue(t.due)?'overdue':''}"><i class="ti ti-calendar-due" aria-hidden="true"></i>Due: ${formatDate(t.due)}${!t.done&&isOverdue(t.due)?' · overdue':''}</span>`:''}
+          ${(t.createdAt||t.added)?`<span class="due"><i class="ti ti-calendar-plus" aria-hidden="true"></i>Created: ${formatTs(t.createdAt||t.added)}</span>`:''}
+          ${t.completedAt?`<span class="due"><i class="ti ti-calendar-check" aria-hidden="true"></i>Completed: ${formatTs(t.completedAt)}</span>`:''}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="icon-btn" onclick="startEditNote(${t.id})" title="Edit note"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+        <button class="icon-btn del-btn" onclick="deleteTask(${t.id})" title="Delete task"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function importTasks(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!isSigned) { showToast('Sign in first before importing'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.tasks || !Array.isArray(data.tasks)) { showToast('Invalid file — no tasks found'); return; }
+      if (!confirm('This will replace your current tasks with the imported ones. Continue?')) return;
+      tasks = data.tasks;
+      nextId = data.nextId || (tasks.length ? Math.max(...tasks.map(t=>t.id))+1 : 1);
+      scheduleSave();
+      render();
+      showToast(tasks.length + ' tasks imported and saved to Drive');
+    } catch { showToast('Could not read file — is it a valid tasks.json?'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function exportTasks() {
+  if (!isSigned || tasks.length === 0) { showToast('No tasks to export — sign in first'); return; }
+  const blob = new Blob([JSON.stringify({ tasks, nextId }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tasks.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('tasks.json downloaded');
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
